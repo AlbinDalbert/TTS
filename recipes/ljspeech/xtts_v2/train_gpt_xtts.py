@@ -8,27 +8,29 @@ from TTS.tts.layers.xtts.trainer.gpt_trainer import GPTArgs, GPTTrainer, GPTTrai
 from TTS.utils.manage import ModelManager
 
 # Logging parameters
-RUN_NAME = "GPT_XTTS_v2.0_LJSpeech_FT"
-PROJECT_NAME = "XTTS_trainer"
+RUN_NAME = "GPT_XTTS_v2_Rebecca_FT_Run2" # <<< CHANGE THIS
+PROJECT_NAME = "XTTS_Rebecca_Trainer" # <<< CHANGE THIS
 DASHBOARD_LOGGER = "tensorboard"
 LOGGER_URI = None
 
 # Set here the path that the checkpoints will be saved. Default: ./run/training/
-OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "run", "training")
+OUT_PATH = "/home/albindalbert/Documents/rebecca source/rebecca_fine/run_attempt4_long/" # <<< CHANGE THIS
+
 
 # Training Parameters
 OPTIMIZER_WD_ONLY_ON_WEIGHTS = True  # for multi-gpu training please make it False
 START_WITH_EVAL = True  # if True it will star with evaluation
-BATCH_SIZE = 3  # set here the batch size
-GRAD_ACUMM_STEPS = 84  # set here the grad accumulation steps
+BATCH_SIZE = 1  # set here the batch size
+GRAD_ACUMM_STEPS = 256  # set here the grad accumulation steps
 # Note: we recommend that BATCH_SIZE * GRAD_ACUMM_STEPS need to be at least 252 for more efficient training. You can increase/decrease BATCH_SIZE but then set GRAD_ACUMM_STEPS accordingly.
 
 # Define here the dataset that you want to use for the fine-tuning on.
 config_dataset = BaseDatasetConfig(
     formatter="ljspeech",
-    dataset_name="ljspeech",
-    path="/raid/datasets/LJSpeech-1.1_24khz/",
-    meta_file_train="/raid/datasets/LJSpeech-1.1_24khz/metadata.csv",
+    dataset_name="rebecca",
+    path="/home/albindalbert/Documents/rebecca source/output",
+    meta_file_train="metadata_train.csv",
+    meta_file_val="metadata_eval.csv",
     language="en",
 )
 
@@ -72,7 +74,7 @@ if not os.path.isfile(TOKENIZER_FILE) or not os.path.isfile(XTTS_CHECKPOINT):
 
 # Training sentences generations
 SPEAKER_REFERENCE = [
-    "./tests/data/ljspeech/wavs/LJ001-0002.wav"  # speaker reference to be used in training test sentences
+    "/home/albindalbert/Documents/rebecca source/rebecca_fine/ref voice.wav"  # speaker reference to be used in training test sentences
 ]
 LANGUAGE = config_dataset.language
 
@@ -80,6 +82,7 @@ LANGUAGE = config_dataset.language
 def main():
     # init args and config
     model_args = GPTArgs(
+        # gradient_checkpointing=True,
         max_conditioning_length=132300,  # 6 secs
         min_conditioning_length=66150,  # 3 secs
         debug_loading_failures=False,
@@ -99,8 +102,10 @@ def main():
     audio_config = XttsAudioConfig(sample_rate=22050, dvae_sample_rate=22050, output_sample_rate=24000)
     # training parameters config
     config = GPTTrainerConfig(
+        epochs=20,
         output_path=OUT_PATH,
         model_args=model_args,
+        precision="fp16",
         run_name=RUN_NAME,
         project_name=PROJECT_NAME,
         run_description="""
@@ -117,19 +122,19 @@ def main():
         print_step=50,
         plot_step=100,
         log_model_step=1000,
-        save_step=10000,
-        save_n_checkpoints=1,
+        save_step=3000,
+        save_n_checkpoints=3,
         save_checkpoints=True,
         # target_loss="loss",
         print_eval=False,
-        # Optimizer values like tortoise, pytorch implementation with modifications to not apply WD to non-weight parameters.
-        optimizer="AdamW",
-        optimizer_wd_only_on_weights=OPTIMIZER_WD_ONLY_ON_WEIGHTS,
-        optimizer_params={"betas": [0.9, 0.96], "eps": 1e-8, "weight_decay": 1e-2},
-        lr=5e-06,  # learning rate
-        lr_scheduler="MultiStepLR",
-        # it was adjusted accordly for the new step scheme
-        lr_scheduler_params={"milestones": [50000 * 18, 150000 * 18, 300000 * 18], "gamma": 0.5, "last_epoch": -1},
+        optimizer="Adafactor",
+        # optimizer_params={"scale_parameter": False, "relative_step": False, "warmup_init": False}, # <<< REMOVE OR COMMENT OUT THIS LINE
+        optimizer_params={}, # <<< Or set to an empty dict
+        lr=5e-06, # <<< KEEP THIS as None (or maybe try the original 5e-6 if None fails)
+        lr_scheduler=None, # <<< KEEP THIS as None
+        lr_scheduler_params=None, # <<< KEEP THIS as None
+
+
         test_sentences=[
             {
                 "text": "It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent.",
@@ -138,6 +143,21 @@ def main():
             },
             {
                 "text": "This cake is great. It's so delicious and moist.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "It was all fucking weird",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Everything revolved around that whole imperium. And those fucking idiots never cared.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Just one pill of inhibex and I would be on top again.",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
             },
@@ -158,7 +178,7 @@ def main():
     # init the trainer and 🚀
     trainer = Trainer(
         TrainerArgs(
-            restore_path=None,  # xtts checkpoint is restored via xtts_checkpoint key so no need of restore it using Trainer restore_path parameter
+            restore_path="/home/albindalbert/Documents/rebecca source/rebecca_fine/run_attempt4_long/GPT_XTTS_v2_Rebecca_FT_Run2-May-03-2025_02+54PM-dbf1a08a/best_model_37447.pth",
             skip_train_epoch=False,
             start_with_eval=START_WITH_EVAL,
             grad_accum_steps=GRAD_ACUMM_STEPS,

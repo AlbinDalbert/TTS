@@ -91,23 +91,35 @@ class Synthesizer(nn.Module):
 
         if tts_checkpoint:
             self._load_tts(tts_checkpoint, tts_config_path, use_cuda)
-            self.output_sample_rate = self.tts_config.audio["sample_rate"]
+            self.output_sample_rate = self.tts_config.audio["output_sample_rate"]
+            # print(f"DEBUG: Value of self.output_sample_rate IMMEDIATELY AFTER tts_checkpoint: {self.output_sample_rate}")
 
         if vocoder_checkpoint:
             self._load_vocoder(vocoder_checkpoint, vocoder_config, use_cuda)
-            self.output_sample_rate = self.vocoder_config.audio["sample_rate"]
+            self.output_sample_rate = self.vocoder_config.audio["output_sample_rate"]
+            # print(f"DEBUG: Value of self.output_sample_rate IMMEDIATELY AFTER vocoder_checkpoint: {self.output_sample_rate}")
 
         if vc_checkpoint:
             self._load_vc(vc_checkpoint, vc_config, use_cuda)
             self.output_sample_rate = self.vc_config.audio["output_sample_rate"]
+            # print(f"DEBUG: Value of self.output_sample_rate IMMEDIATELY AFTER vc_checkpoint: {self.output_sample_rate}")
 
         if model_dir:
             if "fairseq" in model_dir:
                 self._load_fairseq_from_dir(model_dir, use_cuda)
                 self.output_sample_rate = self.tts_config.audio["sample_rate"]
             else:
+                            
                 self._load_tts_from_dir(model_dir, use_cuda)
+
+              
+                config_output_sr = self.tts_config.audio["output_sample_rate"]
+                    # print(f"DEBUG: Value from self.tts_config.audio['output_sample_rate']: {config_output_sr}")
+                
+                # The critical assignment line:
                 self.output_sample_rate = self.tts_config.audio["output_sample_rate"]
+
+        # print(f"DEBUG: Value of self.output_sample_rate end of init: {self.output_sample_rate}")
 
     @staticmethod
     def _get_segmenter(lang: str):
@@ -248,6 +260,9 @@ class Synthesizer(nn.Module):
             wav = wav.cpu().numpy()
         if isinstance(wav, list):
             wav = np.array(wav)
+
+        print(f"DEBUG: sample rate being used: {self.output_sample_rate}")
+
         save_wav(wav=wav, path=path, sample_rate=self.output_sample_rate, pipe_out=pipe_out)
 
     def voice_conversion(self, source_wav: str, target_wav: str) -> List[int]:

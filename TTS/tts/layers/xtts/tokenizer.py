@@ -589,6 +589,8 @@ def korean_transliterate(text):
 DEFAULT_VOCAB_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../data/tokenizer.json")
 
 
+import os # Make sure os is imported at the top of the file if not already
+
 class VoiceBpeTokenizer:
     def __init__(self, vocab_file=None):
         self.tokenizer = None
