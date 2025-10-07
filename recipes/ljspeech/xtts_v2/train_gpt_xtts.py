@@ -8,27 +8,27 @@ from TTS.tts.layers.xtts.trainer.gpt_trainer import GPTArgs, GPTTrainer, GPTTrai
 from TTS.utils.manage import ModelManager
 
 # Logging parameters
-RUN_NAME = "GPT_XTTS_v2_Rebecca_FT_Run2" # <<< CHANGE THIS
-PROJECT_NAME = "XTTS_Rebecca_Trainer" # <<< CHANGE THIS
+RUN_NAME = "GPT_XTTS_v2_Rebecca_FT_IX_Run1_generaliset" # <<< CHANGE THIS
+PROJECT_NAME = "XTTS_Rebecca_Trainer_IX" # <<< CHANGE THIS
 DASHBOARD_LOGGER = "tensorboard"
 LOGGER_URI = None
 
 # Set here the path that the checkpoints will be saved. Default: ./run/training/
-OUT_PATH = "/home/albindalbert/Documents/rebecca source/rebecca_fine/run_attempt4_long/" # <<< CHANGE THIS
+OUT_PATH = "/home/chell/Documents/rebecca source/rebecca_IX/run_attempt3/" # <<< CHANGE THIS
 
 
 # Training Parameters
 OPTIMIZER_WD_ONLY_ON_WEIGHTS = True  # for multi-gpu training please make it False
 START_WITH_EVAL = True  # if True it will star with evaluation
 BATCH_SIZE = 1  # set here the batch size
-GRAD_ACUMM_STEPS = 256  # set here the grad accumulation steps
+GRAD_ACUMM_STEPS = 384  # set here the grad accumulation steps
 # Note: we recommend that BATCH_SIZE * GRAD_ACUMM_STEPS need to be at least 252 for more efficient training. You can increase/decrease BATCH_SIZE but then set GRAD_ACUMM_STEPS accordingly.
 
 # Define here the dataset that you want to use for the fine-tuning on.
 config_dataset = BaseDatasetConfig(
     formatter="ljspeech",
     dataset_name="rebecca",
-    path="/home/albindalbert/Documents/rebecca source/output",
+    path="/home/chell/Documents/rebecca source/output",
     meta_file_train="metadata_train.csv",
     meta_file_val="metadata_eval.csv",
     language="en",
@@ -74,7 +74,7 @@ if not os.path.isfile(TOKENIZER_FILE) or not os.path.isfile(XTTS_CHECKPOINT):
 
 # Training sentences generations
 SPEAKER_REFERENCE = [
-    "/home/albindalbert/Documents/rebecca source/rebecca_fine/ref voice.wav"  # speaker reference to be used in training test sentences
+    "/home/chell/Documents/rebecca source/rebecca_fine/ref_voice_calm.wav"  # speaker reference to be used in training test sentences
 ]
 LANGUAGE = config_dataset.language
 
@@ -102,7 +102,8 @@ def main():
     audio_config = XttsAudioConfig(sample_rate=22050, dvae_sample_rate=22050, output_sample_rate=24000)
     # training parameters config
     config = GPTTrainerConfig(
-        epochs=20,
+        #epochs=64, # 15k lim
+        epochs=85, # 20k lim
         output_path=OUT_PATH,
         model_args=model_args,
         precision="fp16",
@@ -122,7 +123,7 @@ def main():
         print_step=50,
         plot_step=100,
         log_model_step=1000,
-        save_step=3000,
+        save_step=5000,
         save_n_checkpoints=3,
         save_checkpoints=True,
         # target_loss="loss",
@@ -142,11 +143,6 @@ def main():
                 "language": LANGUAGE,
             },
             {
-                "text": "This cake is great. It's so delicious and moist.",
-                "speaker_wav": SPEAKER_REFERENCE,
-                "language": LANGUAGE,
-            },
-            {
                 "text": "It was all fucking weird",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
@@ -158,6 +154,56 @@ def main():
             },
             {
                 "text": "Just one pill of inhibex and I would be on top again.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Hello there! How are you doing today?",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "In 2025, artificial intelligence changed the way people communicate forever.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "The quick brown fox jumps over the lazy dog.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Wait—did you really mean to send that message so late at night?",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "She whispered, 'Meet me where the river bends,' and then disappeared into the crowd.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Numbers like 3.14159 or dates like October 21st can be surprisingly challenging to pronounce clearly.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "This sentence is deliberately long, full of commas, pauses, and shifting tones, to see how well the model can carry intonation across a complex structure without sounding mechanical.",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Wow! That was amazing!",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Do penguins really march, or is that just a documentary trick?",
+                "speaker_wav": SPEAKER_REFERENCE,
+                "language": LANGUAGE,
+            },
+            {
+                "text": "Silence often says more than words ever could.",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
             },
@@ -178,7 +224,7 @@ def main():
     # init the trainer and 🚀
     trainer = Trainer(
         TrainerArgs(
-            restore_path="/home/albindalbert/Documents/rebecca source/rebecca_fine/run_attempt4_long/GPT_XTTS_v2_Rebecca_FT_Run2-May-03-2025_02+54PM-dbf1a08a/best_model_37447.pth",
+            restore_path="/home/chell/Documents/rebecca source/rebecca_IX/run_attempt3/GPT_XTTS_v2_Rebecca_FT_IX_Run1_generaliset-September-18-2025_12+08PM-24b3b4d5_90k/best_model_89590.pth",
             skip_train_epoch=False,
             start_with_eval=START_WITH_EVAL,
             grad_accum_steps=GRAD_ACUMM_STEPS,

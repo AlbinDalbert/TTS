@@ -36,7 +36,7 @@ def register_config(model_name: str) -> Coqpit:
     config_name = model_name + "_config"
 
     # TODO: fix this
-    if model_name == "xtts":
+    if model_name in ("xtts", "xtts_ft"):
         from TTS.tts.configs.xtts_config import XttsConfig
 
         config_class = XttsConfig
